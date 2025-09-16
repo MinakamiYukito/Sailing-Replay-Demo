@@ -34,9 +34,9 @@ dist-ssr
 !Race/Racer2-easystart.sbp
 !Race/Racer3-fasterwind.sbp
 !Race/Racer4-longercounterdown.sbp
-# Keep all sbp files under public/data
 
-!public/data/*.sbp
+# Keep all sbp files under public/Race
+!public/Race/*.sbp
 
 # Ignore Race test folder entirely
 Race/Race test/
