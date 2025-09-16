@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif; 
+}
+
+.landing-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; 
+  width: 100vw;
+  background-image: url('/boat.png'); 
+  background-size: cover;
+  background-position: center;
+  padding: 20px; 
+  box-sizing: border-box;
+}
+
+.content-card {
+  background: rgba(255, 255, 255, 0.15); 
+  backdrop-filter: blur(25px); 
+  -webkit-backdrop-filter: blur(25px); 
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  padding: 40px 50px;
+  text-align: center;
+  color: #333;
+  max-width: 500px;
+  width: 100%;
+}
+
+.content-card h1 {
+  font-size: 2.5rem; 
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #1a2a4c; 
+}
+
+.content-card h3 {
+  font-size: 1.1rem;
+  font-weight: 400;
+  margin: 5px 0;
+  color: #4a5568;
+}
+
+.content-card .subtitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 40px;
+  margin-bottom: 20px;
+  color: #1a2a4c;
+}
+
+.file-input {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.file-input-label {
+  display: inline-block;
+  padding: 12px 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: #007bff; 
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+.file-input-label:hover {
+  transform: translateY(-2px);
+  background: #0056b3;
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+}
+
+/* for mobile device*/
+@media (max-width: 768px) {
+  .content-card {
+    padding: 30px 25px;
+  }
+  
+  .content-card h1 {
+    font-size: 2rem;
+  }
+}
