@@ -54,29 +54,24 @@ const RudderAngleGraph = ({
         },
       ],
       series: [
-        { label: "Rudder Angle", stroke: "black" },
-        ...rudderAngle.map((_, index) => ({
-          label: `Boat-${index + 1}`,
-          stroke: lineColors[index],
-          // Fix the value to no decimal places
-          value: (_, rawValue) => (frameIndex !== -1 ? rudderAngle[index][frameIndex].toFixed(0) : 0),
-        })),
-      ],
-      series: [
-        { label: "Rudder Angle", stroke: "black" },
-        ...(window.isLiveData ? liveData.map((data, index) => ({
-          label: `Live Boat-${index + 1}`,
-          stroke: lineColors[index],
-          value: () => {
-            // Handle the live data value here
-            return data.rudderAngle ? data.rudderAngle.slice(-1)[0].toFixed(0) : 0; // Fix to no decimal places
-          },
-        })): rudderAngle.map((_, index) => ({
-          label: `Boat-${index + 1}`,
-          stroke: lineColors[index],
-          // Fix the value to no decimal places
-          value: (_, rawValue) => (frameIndex !== -1 ? rudderAngle[index][frameIndex].toFixed(0) : 0),
-        }))),
+        {}, // x 轴占位
+        ...(window.isLiveData
+          ? liveData.map((data, index) => ({
+              label: `Live Boat-${index + 1}`,
+              stroke: lineColors[index],
+              value: () =>
+                data.rudderAngle
+                  ? data.rudderAngle.slice(-1)[0].toFixed(0)
+                  : 0,
+            }))
+          : rudderAngle.map((_, index) => ({
+              label: `Boat-${index + 1}`,
+              stroke: lineColors[index],
+              value: () =>
+                frameIndex !== -1
+                  ? rudderAngle[index][frameIndex].toFixed(0)
+                  : 0,
+            }))),
       ],
     };
 
