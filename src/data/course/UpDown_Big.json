@@ -1,0 +1,20 @@
+{
+  "Top": {
+    "X": -150,
+    "Y": 0
+  },
+  "Left": null,
+  "Bottom": {
+    "X": 150,
+    "Y": 0
+  },
+  "Right": null,
+  "Start_left": {
+    "X": 0,
+    "Y": -20
+  },
+  "Start_right": {
+    "X": 0,
+    "Y": 20
+  }
+}

@@ -1,0 +1,39 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# Env & local secrets
+.env
+.env.*.local
+
+# Ignore all sbp files by default
+**/*.sbp
+
+# Keep only the 4 demo sbp files
+!Race/Racer1-normal.sbp
+!Race/Racer2-easystart.sbp
+!Race/Racer3-fasterwind.sbp
+!Race/Racer4-longercounterdown.sbp
+
+# Ignore Race test folder entirely
+Race/Race test/

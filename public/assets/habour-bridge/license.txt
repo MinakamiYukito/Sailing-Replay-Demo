@@ -1,0 +1,11 @@
+Model Information:
+* title:	Gotham Bridge
+* source:	https://sketchfab.com/3d-models/gotham-bridge-9e8f0a9ee640473e8d1eb62347c55b6a
+* author:	an anonymous gothamite (https://sketchfab.com/alshareef892007)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Gotham Bridge" (https://sketchfab.com/3d-models/gotham-bridge-9e8f0a9ee640473e8d1eb62347c55b6a) by an anonymous gothamite (https://sketchfab.com/alshareef892007) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

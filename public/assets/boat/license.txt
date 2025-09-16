@@ -1,0 +1,11 @@
+Model Information:
+* title:	Laser 4.7 simple model
+* source:	https://sketchfab.com/3d-models/laser-47-simple-model-d1902e9cc8ef4842bdd3c60ccebf71d4
+* author:	sindorman (https://sketchfab.com/sindorman)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Laser 4.7 simple model" (https://sketchfab.com/3d-models/laser-47-simple-model-d1902e9cc8ef4842bdd3c60ccebf71d4) by sindorman (https://sketchfab.com/sindorman) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
