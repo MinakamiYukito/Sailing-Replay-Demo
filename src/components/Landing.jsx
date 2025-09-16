@@ -161,7 +161,7 @@ const Landing = ({ onDataReceived, liveData, isConnected, onAssetLoaded, sendMes
   return (    
       <div className="row">       
         <div id="boat">
-          <img src="boat.png" alt={"Boat"} />
+          <img src="/boat.png" alt={"Boat"} />
         </div>      
           <div id="content">
             <br />
