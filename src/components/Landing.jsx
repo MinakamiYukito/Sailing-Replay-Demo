@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../Landing.css';
+import './Landing.css';
 
 const Landing = ({ onDataReceived }) => {
   const demoFiles = [
