@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useState } from "react";
-import "../../../main.css";
+import "../../assets/main.css";
 import BoomAngleGraph from "./BoomAngleGraph";
 import FwdVelocityGraph from "./FwdVelocityGraph";
 import HeadingGraph from "./HeadingGraph";

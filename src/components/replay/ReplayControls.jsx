@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useClock } from '../ClockContext'; 
-import '../../main.css';
+import { useClock } from '../../contexts/ClockContext'; 
+import '../../assets/main.css';
 
 const ReplayControls = ({ onPlay, onReplay, pauseReceiving, resumeReceiving }) => {
   const [isPlaying, setIsPlaying] = useState(true);
@@ -21,17 +21,6 @@ const ReplayControls = ({ onPlay, onReplay, pauseReceiving, resumeReceiving }) =
   
       // Call the external play function
       // onPlay();
-  
-      // Check if it's live data
-      if (window.isLiveData) {
-        if (newState) {
-          // newState is true -> resume playing
-          resumeReceiving();  // Resume live data playing
-        } else {
-          // newState is false -> pause playing
-          pauseReceiving();  // Pause live data playing
-        }
-      }
   
       return newState;  // Update the state with the new play/pause state
     });

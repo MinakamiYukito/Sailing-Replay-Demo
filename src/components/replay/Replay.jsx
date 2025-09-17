@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import "/src/replay.css";
+import "/src/assets/replay.css";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Water } from "three/addons/objects/Water.js";
 import { Sky } from "three/addons/objects/Sky.js";
@@ -18,7 +18,7 @@ import Triangular_Small from "../../data/course/Triangular_Small.json";
 import Triangular_Big from "../../data/course/Triangular_Big.json";
 import UpDown_Small from "../../data/course/UpDown_Small.json";
 import UpDown_Big from "../../data/course/UpDown_Big.json";
-import { useClock } from "../ClockContext";
+import { useClock } from "../../contexts/ClockContext";
 import Stats from "stats.js";
 
 let camera, scene, renderer;

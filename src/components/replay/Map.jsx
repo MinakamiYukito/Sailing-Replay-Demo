@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import Plot from "react-plotly.js";
-import Crosswind_Small from "../data/course/Crosswind_Small.json";
-import Crosswind_Big from "../data/course/Crosswind_Big.json";
-import Trapezoid_Small from "../data/course/Trapezoid_Small.json";
-import Trapezoid_Big from "../data/course/Trapezoid_Big.json";
-import Triangular_Small from "../data/course/Triangular_Small.json";
-import Triangular_Big from "../data/course/Triangular_Big.json";
-import UpDown_Small from "../data/course/UpDown_Small.json";
-import UpDown_Big from "../data/course/UpDown_Big.json";
-import { useClock } from "../components/ClockContext";
+import Crosswind_Small from "../../data/course/Crosswind_Small.json";
+import Crosswind_Big from "../../data/course/Crosswind_Big.json";
+import Trapezoid_Small from "../../data/course/Trapezoid_Small.json";
+import Trapezoid_Big from "../../data/course/Trapezoid_Big.json";
+import Triangular_Small from "../../data/course/Triangular_Small.json";
+import Triangular_Big from "../../data/course/Triangular_Big.json";
+import UpDown_Small from "../../data/course/UpDown_Small.json";
+import UpDown_Big from "../../data/course/UpDown_Big.json";
+import { useClock } from "../../contexts/ClockContext";
 
 let course_data;
 

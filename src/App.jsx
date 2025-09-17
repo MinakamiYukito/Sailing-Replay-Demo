@@ -1,11 +1,11 @@
 import React, { useRef, useState } from "react";
 import Replay from "./components/replay/Replay";
-import ReplayControls from "./components/replay-control/ReplayControls.jsx";
-import "../src/main.css";
-import Map from "./components/Map";
-import GraphControlPanel from "./components/replay/graphs/GraphControlPanel";
+import ReplayControls from "./components/replay/ReplayControls.jsx";
+import "./assets/main.css";
+import Map from "./components/replay/Map.jsx";
+import GraphControlPanel from "./components/graphs/GraphControlPanel.jsx";
 import Landing from "./components/Landing.jsx";
-import { ClockProvider, useClock } from "./components/ClockContext";
+import { ClockProvider, useClock } from "./contexts/ClockContext.jsx";
 
 const AppContent = () => {
   const canvasRef = useRef(null);
