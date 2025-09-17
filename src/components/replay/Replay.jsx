@@ -7,7 +7,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Water } from "three/addons/objects/Water.js";
 import { Sky } from "three/addons/objects/Sky.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import waternormals from "../../../public/assets/waternormals.jpg";
+import waternormals from "../../assets/waternormals.jpg";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import Crosswind_Small from "../../data/course/Crosswind_Small.json";
@@ -25,9 +25,7 @@ let camera, scene, renderer;
 let controls, water, sun, northIndicator;
 let course_data;
 let stats;
-//global variables to store data from multiple files
-let allTimeAndXYData = []; // Store time and XY data from all files
-let allTimeIntervals = []; // Store time intervals from all files
+
 let boatMeshes = [];
 let selectedBoat = null;
 let raycaster;
@@ -981,7 +979,6 @@ function resetBoatHighlight() {
         boatInstances={boatInstances}
       />
       */}
-      {/* Render canvas or other components */}
       <div
         id="boat-info-container"
         style={{
@@ -1001,7 +998,6 @@ function resetBoatHighlight() {
           />
         )}
       </div>
-      {/* <TimeoutPopup dataTimeout={dataTimeout} setDataTimeout={setDataTimeout} /> */}
     </div>
   );
 };
