@@ -54,7 +54,7 @@ const RudderAngleGraph = ({
         },
       ],
       series: [
-        {}, // x 轴占位
+        {},
         ...(window.isLiveData
           ? liveData.map((data, index) => ({
               label: `Live Boat-${index + 1}`,

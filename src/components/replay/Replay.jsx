@@ -20,8 +20,6 @@ import UpDown_Small from "../../data/course/UpDown_Small.json";
 import UpDown_Big from "../../data/course/UpDown_Big.json";
 import { useClock } from "../ClockContext";
 import Stats from "stats.js";
-import { TbUserQuestion } from "react-icons/tb";
-// import TimeoutPopup from "../TimeoutPopup";
 
 let camera, scene, renderer;
 let controls, water, sun, northIndicator;
@@ -43,9 +41,6 @@ const colors = [
   "cyan",
   "magenta",
 ];
-
-// Create a map to track the color assigned to each boat
-const boatColorMap = {};
 
 const loader = new GLTFLoader();
 
@@ -297,69 +292,7 @@ async function importCourseData(courseData) {
   }
 }
 
-const BoatSelectionCheckboxes = ({
-  fileNames,
-  onVisibilityChange,
-  boatInstances,
-}) => {
-  const [selectedBoats, setSelectedBoats] = useState(() => {
-    // Load data from local storage if available, otherwise default to all true
-    const savedData = JSON.parse(localStorage.getItem("selectedBoats1"));
-    return savedData || Array.from({ length: fileNames.length }, () => true);
-  });
-
-  useEffect(() => {
-    // Update local storage whenever selectedBoats changes
-    localStorage.setItem("selectedBoats1", JSON.stringify(selectedBoats));
-  }, [selectedBoats]);
-
-  useEffect(() => {
-    window.addEventListener("click", onDocumentMouseClick);
-    return () => {
-      window.removeEventListener("click", onDocumentMouseClick); // Cleanup
-    };
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("click", onDocumentMouseClick, false);
-    return () => {
-      window.removeEventListener("click", onDocumentMouseClick, false);
-    };
-  }, [boatInstances, camera]);
-
-  const handleChange = (index) => {
-    const updatedSelectedBoats = [...selectedBoats];
-    updatedSelectedBoats[index] = !updatedSelectedBoats[index];
-    setSelectedBoats(updatedSelectedBoats);
-
-    // Update the visibility of the corresponding boat instance
-    const boatInstance = boatInstances[index];
-    if (boatInstance) {
-      boatInstance.visible = updatedSelectedBoats[index];
-    }
-
-    onVisibilityChange(updatedSelectedBoats);
-  };
-
-  return (
-    <div id="checkboxes">
-      {fileNames.map((fileName, index) => (
-        <div key={index}>
-          <label style={{ color: colors[index] }}>
-            <input
-              type="checkbox"
-              checked={selectedBoats[index]}
-              onChange={() => handleChange(index)}
-            />
-            {fileName}
-          </label>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const Replay = ({ allData, canvasRef, upperHalfRef, mapRef, lastReceivedTime, isPlaying}) => {
+const Replay = ({ allData, canvasRef, upperHalfRef, mapRef, isPlaying}) => {
   const [graphicsMode, setGraphicsMode] = useState(detectDeviceCapabilities());  
   const { globalClockTime } = useClock();
   const [visibleBoats, setVisibleBoats] = useState(
@@ -370,8 +303,6 @@ const Replay = ({ allData, canvasRef, upperHalfRef, mapRef, lastReceivedTime, is
   const rendererRef = useRef(null); // To store the renderer instance
   
   const [selectedBoat, setSelectedBoat] = useState(null);
-  const [isLiveData, setIsLiveData] = useState(window.isLiveData);
-
   const [boatPaths, setBoatPaths] = useState({}); // Initialize state for boat paths
 
   // Function to update boat info when a boat is clicked
@@ -417,38 +348,6 @@ const Replay = ({ allData, canvasRef, upperHalfRef, mapRef, lastReceivedTime, is
       window.removeEventListener("resize", onWindowResize);
     };
   }, [graphicsMode, upperHalfRef]);
-
-  useEffect(() => {
-    if(window.isLiveData){
-    const updateBoats = () => {
-      if (allData && allData.length > 0) {
-        allData.forEach((data, index) => {
-          const boat = boatMeshes[index];
-          if (boat) {
-            const newX = data.X_Position[0];
-            const newY = data.Y_Position[0];
-            boat.position.set(-newX, boat.position.y, newY);
-            boat.rotation.y = data.headingRadians[0];
-          }
-        });
-      }
-    };
-
-    const animateLiveData = () => {
-      requestAnimationFrame(animateLiveData);
-      updateBoats();
-      renderer.render(scene, camera);
-    };
-
-    animateLiveData();
-
-    return () => {
-      cancelAnimationFrame(animateLiveData);
-    };}
-  }, [allData]);
-  //-------------------------
-  
-  const livePoints = []; // Store live points for each boat 
 
   function init() {
     // Create the stats object(Ellie)
@@ -625,62 +524,7 @@ const Replay = ({ allData, canvasRef, upperHalfRef, mapRef, lastReceivedTime, is
     northIndicator.position.set(0, 50, indicatorDistance);
     //scene.add(northIndicator);    
 
-    if (window.isLiveData) {
-      // Create a function to update boatPaths
-      const updateBoatPaths = (allData) => {
-        setBoatPaths((prevBoatPaths) => {
-            const updatedBoatPaths = { ...prevBoatPaths }; // Clone the previous state
 
-            for (let j = 0; j < allData.length; j++) {
-                const boatName = allData[j].name[0];
-                const X_Position = allData[j].X_Position;
-                const Y_Position = allData[j].Y_Position;
-
-                console.log('boatName:', boatName);
-                console.log('X_Position:', X_Position);
-                console.log('Y_Position:', Y_Position);
-
-                // Assign a color to the boat if it doesn't already have one
-                if (!boatColorMap[boatName]) {
-                  const colorIndex = Object.keys(boatColorMap).length % colors.length; // Cycle through colors
-                  boatColorMap[boatName] = colors[colorIndex]; // Assign a color from the colors array
-                }
-                
-                // Create or update the path for the current boat
-                if (!updatedBoatPaths[boatName]) {
-                    updatedBoatPaths[boatName] = [];
-                }
-
-                if (!isNaN(X_Position[0]) && !isNaN(Y_Position[0])) {
-                    const position = new THREE.Vector3(-X_Position[0], 0, Y_Position[0]);
-                    updatedBoatPaths[boatName].push(position);
-                } 
-            }
-
-            return updatedBoatPaths; // Return the updated state
-        });
-    };
-
-    // Call the update function with the incoming data
-    updateBoatPaths(allData);
-
-    // Draw lines for the boats based on updated paths
-    Object.keys(boatPaths).forEach(boatName => {
-        if (boatPaths[boatName].length > 1) {
-            const points = boatPaths[boatName];
-
-            // Get the assigned color for the current boat
-            const boatColor = boatColorMap[boatName];
-
-            const geometry = new THREE.BufferGeometry().setFromPoints(points);            
-            const material = new THREE.LineBasicMaterial({ color: boatColor, linewidth: 2, linecap: "round", linejoin: "round" });
-            const line = new THREE.Line(geometry, material);
-            scene.add(line);
-        } else {
-          console.warn(`Skipping point for boat ${boatName} due to invalid position.`);
-      }
-    });
-    } else {
       for (let j = 0; j < allData.length; j++) {
         //const timeAndXYData = allData[j].timeAndXY;        
         const time = allData[j].time;
@@ -722,7 +566,7 @@ const Replay = ({ allData, canvasRef, upperHalfRef, mapRef, lastReceivedTime, is
           );
         }
       }
-    }    
+    
 
     const startingLine = [];
 
@@ -778,7 +622,6 @@ const Replay = ({ allData, canvasRef, upperHalfRef, mapRef, lastReceivedTime, is
 
     // Start the animation loop
     animate();
-    handleMultipleFilesData();
     moveBoats(colors);
     updateAllBoats(); 
   }
@@ -908,14 +751,11 @@ function resetBoatHighlight() {
     }
   } 
   // BoatInfo component to display boat name and last received time
-  const BoatInfo = ({ boatName, isLiveData, lastReceivedTime }) => {
-
-    const formattedTime = (lastReceivedTime * 60).toFixed(3);
+  const BoatInfo = ({ boatName, lastReceivedTime }) => {
 
     return (
       <div>
         <p>Boat Name: {boatName}</p>
-        {isLiveData && <p>Real internal time: {formattedTime}s</p>}
       </div>
     );
   };
@@ -954,17 +794,8 @@ function resetBoatHighlight() {
     stats.begin();
 
     requestAnimationFrame(animate);
-    // render();
-    // Check if we're in live data mode
-    if (window.isLiveData) {
-      // Only render if we are playing in live data mode
-      if (isPlaying) {
-          render(); // Call render for live data
-      }
-    } else {
-        // For local file upload mode, always render
-        render(); // Call render for local file upload
-    }
+    render()
+
     controls.update();
 
     // Log the number of triangles rendered
@@ -980,21 +811,8 @@ function resetBoatHighlight() {
     };
   }, []);
 
-  // Add logic to force low graphics mode during live streaming
-function setGraphicsModeForStreaming() {
-  if (window.isLiveData) {
-    setGraphicsMode('low');  // Force low graphics mode during live streaming
-  } else {
-    // Fall back to detecting device capabilities
-    setGraphicsMode(detectDeviceCapabilities());
-  }
-}
-
   // Render function
   function render() {
-
-    // Ensure graphicsMode is set based on live streaming status
-    setGraphicsModeForStreaming();
 
     if (graphicsMode === 'high') {
       water.material.uniforms["time"].value += 1.0 / 150.0;  // Keep water moving in high mode
@@ -1004,43 +822,6 @@ function setGraphicsModeForStreaming() {
     }
 
     rendererRef.current?.render(scene, camera);
-  }
-  // Function to handle data from multiple files
-  function handleMultipleFilesData() {
-    // Assuming allData is an array of data from multiple files
-    allData.forEach((data) => {
-      //const timeAndXYData = data.timeAndXY;
-      const time = data.time;
-      const X_Position = data.X_Position;
-      const Y_Position = data.Y_Position;
-
-      // Check for NaN values and skip them
-      if (
-        !isNaN(time) &&
-        Array.isArray(X_Position) &&
-        Array.isArray(Y_Position)
-      ) {
-        // Store time and XY data from all files
-        allTimeAndXYData.push({ time, X_Position, Y_Position });
-        // Calculate intervals for each file
-        const intervals = calculateIntervals(data);
-        allTimeIntervals.push(intervals);
-      } else {
-        //console.error('Invalid data encountered:', data);
-      }
-    });
-  }
-
-  // Calculate the time in Milliseconds between each time record point
-  function calculateIntervals(data) {
-    const intervals = [];
-    for (let i = 2; i < data.length; i++) {
-      const interval = data[i].time - data[i - 1].time;
-      if (!isNaN(interval)) {
-        intervals.push(interval * 60 * 1000);
-      }
-    }
-    return intervals;
   }
 
   // Array to store boat instances for each file
@@ -1217,8 +998,6 @@ function setGraphicsModeForStreaming() {
         {selectedBoat && (
           <BoatInfo
             boatName={selectedBoat}
-            isLiveData={isLiveData}
-            lastReceivedTime={lastReceivedTime}
           />
         )}
       </div>
