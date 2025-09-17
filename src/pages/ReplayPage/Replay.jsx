@@ -2,12 +2,12 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import "/src/assets/replay.css";
+import "./replay.css";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Water } from "three/addons/objects/Water.js";
 import { Sky } from "three/addons/objects/Sky.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import waternormals from "../../assets/waternormals.jpg";
+import waternormals from "/assets/waternormals.jpg";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import Crosswind_Small from "../../data/course/Crosswind_Small.json";
