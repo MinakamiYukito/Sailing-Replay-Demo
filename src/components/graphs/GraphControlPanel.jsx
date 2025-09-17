@@ -101,31 +101,8 @@ const GraphControlPanel = ({
     });
   };
 
-  function transformBoatPathsToSBPFormat(boatPaths) {
-    const sbpData = Object.keys(boatPaths).map((boatIndex) => {
-      const boatData = boatPaths[boatIndex]; // Access the boat's path data
-  
-      return {
-        X_Position: boatData.X_Position,  // Array of X positions
-        Y_Position: boatData.Y_Position,  // Array of Y positions
-        time: boatData.time,  // Array of timestamps
-        headingRadians: boatData.headingRadians,
-        fwdVelocity: boatData.fwdVelocity,
-        hikingEffect: boatData.hikingEffect,
-        boomAngle: boatData.boomAngle,
-        heelAngle: boatData.heelAngle,
-        heading: boatData.heading,
-        rudderAngle: boatData.rudderAngle,
-        windVelo: boatData.windVelo,
-        metadata: boatData.metadata,
-        courseData: boatData.courseData,
-        boatId: boatData.boatId,
-        name: boatData.name,
-      };
-    });
-  
-    return sbpData;
-  } 
+
+
   
   // Effect to set boat paths in live data mode
   useEffect(() => {
@@ -135,14 +112,8 @@ const GraphControlPanel = ({
   }, [allData]);
 
   useEffect(() => {    
-    const sbpData = transformBoatPathsToSBPFormat(boatPaths);
-    if (window.isLiveData) {
-      setLiveData(sbpData);  // Set the data to the boat paths in live data mode                
-    } 
   }, [boatPaths]);
 
-  console.log("New Live Data:", liveData);
-  
   allData.forEach((fileData, index) => {
     if (fileData.time.length > maxTimeLength) {
       maxTimeLength = fileData.time.length;
@@ -181,107 +152,75 @@ const GraphControlPanel = ({
   }, []);
 
   useEffect(() => {
-    // 根据 globalClockTime 计算新的 frameIndex
     const newIndex = FileTime.findIndex((t) => t >= globalClockTime);
     if (newIndex !== -1 && newIndex !== frameIndex) {
       setFrameIndex(newIndex);
     }
   }, [globalClockTime, FileTime, frameIndex]);  
 
-  return (
-    <div className="graph_panel">
-      <div style={{ width: "250px", paddingLeft: "30px" }}>
-        {GraphOptions.map((option, i) => (
-          <p key={i} style={{ color: `black` }}>
-            <input
-              type={`checkbox`}
-              name={option}
-              checked={plotsDispState.includes(option)}
-              onChange={(event) =>
-                togglePlotsDispState({ type: event.target.name })
-              }
-            />
-            {option}
-          </p>
-        ))}
-      </div>
-      <div className="graph_container">
-        {plotsDispState.map(
-          (dispState) =>
-            (dispState === "BOOM_ANGLE" && (
-              <BoomAngleGraph
-                time={FileTime}
-                boomAngle={boomAngle}
-                isRunning={isAssetLoaded}
-                frameIndex={frameIndex}
-                globalClockTime={globalClockTime}
-                liveData={liveData}
-              />
-            )) ||
-            (dispState === "FWD_VELOCITY" && (
-              <FwdVelocityGraph
-                time={FileTime}
-                fwdVelo={fwdVelo}
-                isRunning={isAssetLoaded}
-                frameIndex={frameIndex}
-                globalClockTime={globalClockTime}
-                liveData={liveData}
-              />
-            )) ||
-            (dispState === "HEADING" && (
-              <HeadingGraph
-                time={FileTime}
-                heading={heading}
-                isRunning={isAssetLoaded}
-                frameIndex={frameIndex}
-                globalClockTime={globalClockTime}
-                liveData={liveData}
-              />
-            )) ||
-            (dispState === "HEEL_ANGLE" && (
-              <HeelAngleGraph
-                time={FileTime}
-                heelAngle={heelAngle}
-                isRunning={isAssetLoaded}
-                frameIndex={frameIndex}
-                globalClockTime={globalClockTime}
-                liveData={liveData}
-              />
-            )) ||
-            (dispState === "HIKING_EFFORT" && (
-              <HikingEffortGraph
-                time={FileTime}
-                hiking={hiking}
-                isRunning={isAssetLoaded}
-                frameIndex={frameIndex}
-                globalClockTime={globalClockTime}
-                liveData={liveData}
-              />
-            )) ||
-            (dispState === "RUDDER_ANGLE" && (
-              <RudderAngleGraph
-                time={FileTime}
-                rudderAngle={rudderAngle}
-                isRunning={isAssetLoaded}
-                frameIndex={frameIndex}
-                globalClockTime={globalClockTime}
-                liveData={liveData}
-              />
-            )) ||
-            (dispState === "WIND_VELOCITY" && (
-              <WindVelocityGraph
-                time={FileTime}
-                windVelo={windVelo}
-                isRunning={isAssetLoaded}
-                frameIndex={frameIndex}
-                globalClockTime={globalClockTime}
-                liveData={liveData}
-              />
-            ))
-        )}
-      </div>
+
+  
+const componentMap = {
+  BOOM_ANGLE: BoomAngleGraph,
+  FWD_VELOCITY: FwdVelocityGraph,
+  HEADING: HeadingGraph,
+  HEEL_ANGLE: HeelAngleGraph,
+  HIKING_EFFORT: HikingEffortGraph,
+  RUDDER_ANGLE: RudderAngleGraph,
+  WIND_VELOCITY: WindVelocityGraph,
+};
+
+const commonGraphProps = {
+  time: FileTime,
+  isRunning: isAssetLoaded,
+  frameIndex: frameIndex,
+  globalClockTime: globalClockTime,
+  liveData: liveData,
+};
+
+return (
+  <div className="graph_panel">
+    <div style={{ width: "250px", paddingLeft: "30px" }}>
+      {GraphOptions.map((option) => (
+        <p key={option} style={{ color: `black` }}>
+          <input
+            type={`checkbox`}
+            name={option}
+            checked={plotsDispState.includes(option)}
+            onChange={(event) =>
+              togglePlotsDispState({ type: event.target.name })
+            }
+          />
+          {option}
+        </p>
+      ))}
     </div>
-  );
+    <div className="graph_container">
+      {plotsDispState.map((dispState) => {
+        const GraphComponent = componentMap[dispState];
+        
+        if (GraphComponent) {
+          return (
+            <GraphComponent
+              key={dispState} 
+              {...commonGraphProps}
+              {...{
+                BOOM_ANGLE: { boomAngle: boomAngle },
+                FWD_VELOCITY: { fwdVelo: fwdVelo },
+                HEADING: { heading: heading },
+                HEEL_ANGLE: { heelAngle: heelAngle },
+                HIKING_EFFORT: { hiking: hiking },
+                RUDDER_ANGLE: { rudderAngle: rudderAngle },
+                WIND_VELOCITY: { windVelo: windVelo },
+              }[dispState]}
+            />
+          );
+        }
+        return null;
+      })}
+    </div>
+  </div>
+);
 };
 
 export default GraphControlPanel;

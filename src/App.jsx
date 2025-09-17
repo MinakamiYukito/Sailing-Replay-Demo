@@ -1,10 +1,10 @@
 import React, { useRef, useState } from "react";
-import Replay from "./pages/ReplayPage/Replay.jsx";
+import Replay from "./pages/ReplayPage/ReplayPage.jsx";
 import ReplayControls from "./components/replay/ReplayControls.jsx";
 import "./assets/main.css";
 import Map from "./components/replay/Map.jsx";
 import GraphControlPanel from "./components/graphs/GraphControlPanel.jsx";
-import Landing from "./pages/LandingPage/Landing.jsx";
+import Landing from "./pages/LandingPage/LandingPage.jsx";
 import { ClockProvider, useClock } from "./contexts/ClockContext.jsx";
 
 const AppContent = () => {
