@@ -1,10 +1,12 @@
-// src/utils/sceneManager.js
+//sceneManager.js
+// This file builds and controls the whole Three.js scene for the replay.
+// It creates water, sky, lights, boats, buoys, course lines, and handles clicks.
+// It also updates boat positions based on the global clock time.
 
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Water } from "three/addons/objects/Water.js";
 import { Sky } from "three/addons/objects/Sky.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import Stats from "stats.js";
@@ -19,40 +21,46 @@ let camera, scene, renderer, controls, water, sun, stats, raycaster;
 let boatMeshes = [], boatInstances = [], Buoys = [], flags = [], fileNames = [];
 let animationFrameId;
 
-let _canvasRef, _mapRef, _upperHalfRef, _clockTimeRef, _interactionCallbacks, _allData;
+
+// Three.js core objects
+let _canvasRef, _clockTimeRef, _interactionCallbacks, _allData;
 let _selectedBoatName = null;
 
 const colors = ["red", "blue", "green", "orange", "purple", "yellow", "cyan", "magenta"];
-const loader = new GLTFLoader();
 
 /**
- * Initialize and set the whole Three.js scene
- * @param {object} options 
+ * Setup and start the Three.js scene.
+ * @param {object} options
+ *  - containerRef: React ref for the DOM element where we mount the canvas
+ *  - allData:      array of boat datasets (time, positions, headings, etc.)
+ *  - graphicsMode: string key for graphicsSettings
+ *  - clockTimeRef: ref that holds current global clock time (read-only here)
+ *  - interactionCallbacks: { onBoatSelect, onBoatDeselect }
  */
+
 export async function setupScene(options) {
-    _canvasRef = options.canvasRef;
-    _mapRef = options.mapRef;
-    _upperHalfRef = options.upperHalfRef;
-    _clockTimeRef = options.clockTimeRef;
-    _interactionCallbacks = options.interactionCallbacks;
-    _allData = options.allData;
-    fileNames = options.allData.map(data => data.name);
+    const { containerRef, allData, graphicsMode, clockTimeRef, interactionCallbacks } = options;
+    // Save shared refs/state for later use
+    _canvasRef = containerRef; 
+    _clockTimeRef = clockTimeRef;
+    _interactionCallbacks = interactionCallbacks;
+    _allData = allData;
+    fileNames = allData.map(data => data.name);
 
-    initThreeJS(options.graphicsMode);
+    initThreeJS(graphicsMode);
 
-    const course_data = await importCourseData(options.allData[0].courseData);
+    const course_data = await importCourseData(allData[0]?.courseData);
     if (course_data) {
         generateBuoy(course_data);
         generateFlag(course_data);
         createCourseLines(course_data);
     }
-    
-    createBoats(options.allData);
+
+    createBoats(allData);
     updateAllBoats();
     animate();
-    
-    window.addEventListener("resize", onWindowResize);
 
+    window.addEventListener("resize", onWindowResize);
 }
 
 export function cleanup() {
@@ -108,37 +116,33 @@ export function cleanup() {
 //Internal Helper Functions
 
 function initThreeJS(graphicsMode) {
+    // 确保容器存在
+    if (!_canvasRef || !_canvasRef.current) return;
+    const container = _canvasRef.current;
+
     stats = new Stats();
     stats.showPanel(0);
-    stats.dom.style.position = "absolute";
+    // 将 stats 附加到容器内，而不是 body，避免污染全局
+    stats.dom.style.position = "absolute"; 
     stats.dom.style.top = "0px";
     stats.dom.style.left = "0px";
-    stats.dom.style.zIndex = "100";
-    stats.dom.style.transform = "scale(1.5)";
-    stats.dom.style.transformOrigin = "top left";
-    document.body.appendChild(stats.dom);
+    container.appendChild(stats.dom);
 
     raycaster = new THREE.Raycaster();
     renderer = new THREE.WebGLRenderer({
         antialias: graphicsSettings[graphicsMode].antialias,
+        alpha: true // 使用 alpha 透明，以便 CSS 背景可见
     });
-    renderer.setPixelRatio(graphicsSettings[graphicsMode].pixelRatio);
-    renderer.setSize(
-        _canvasRef.current.clientWidth,
-        _mapRef.current.clientHeight
-    );
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(container.clientWidth, container.clientHeight); // 使用容器的尺寸
     renderer.toneMapping = THREE.ReinhardToneMapping;
-    renderer.setClearColor(0x000000);
-    renderer.domElement.style.position = "fixed";
-    renderer.domElement.style.zIndex = "-1";
-    renderer.domElement.style.left = "0";
-    renderer.domElement.style.top = "0";
-    _upperHalfRef.current.appendChild(renderer.domElement);
-
+    
+    // **核心改变**：将 canvas 附加到我们唯一的容器中
+    container.appendChild(renderer.domElement); 
     renderer.domElement.addEventListener("click", onDocumentMouseClick);
 
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 2000);
+    camera = new THREE.PerspectiveCamera(30, container.clientWidth / container.clientHeight, 1, 2000);
     camera.position.set(10, 50, -120);
 
     sun = new THREE.Vector3();
@@ -203,7 +207,6 @@ function initThreeJS(graphicsMode) {
         scene.add(southMesh);
     });
 }
-
 function animate() {
     if (!renderer || !stats) {
         return;
@@ -325,6 +328,18 @@ function updateAllBoats() {
             const loadedObject = boatData.mesh;
             const { time, X_Position, Y_Position, headingRadians, heelAngle } = boatData.data;
 
+
+            const firstTime = time.find(t => typeof t === 'number');
+
+            // If global time is before boat's first record, hide this boat
+            if (firstTime === undefined || globalClockTime < firstTime) {
+                loadedObject.visible = false;
+                return; 
+            } else {
+                loadedObject.visible = true;
+            }
+
+
             let latestPosition = null;
             for(let i = 0; i < time.length; i++) {
                 if (time[i] <= globalClockTime) {
@@ -353,14 +368,25 @@ function updateAllBoats() {
 }
 
 function onWindowResize() {
-    if (!camera || !renderer) return;
-    camera.aspect = _canvasRef.current.clientWidth / _mapRef.current.clientHeight;
+    // Make sure all objects exist
+    if (!_canvasRef || !_canvasRef.current || !camera || !renderer) return;
+
+    const container = _canvasRef.current;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    renderer.setSize(
-        _canvasRef.current.clientWidth,
-        _mapRef.current.clientHeight
-    );
+
+    // This also updates the canvas size
+    renderer.setSize(width, height);
 }
+
+/**
+ * Handle clicks on the canvas for selecting/deselecting a boat.
+ * - If click a boat: highlight it and show only its track.
+ * - If click empty area: cancel selection and show all tracks.
+ */
 
 function onDocumentMouseClick(event) {
 
@@ -391,7 +417,7 @@ function onDocumentMouseClick(event) {
             _selectedBoatName = null;
             _interactionCallbacks.onBoatDeselect();
         } else {
-            //Otherwise, select new boat
+            //Otherwise, select new boat: highlight it and show only its track
             resetBoatHighlight();
             hideAllTracks();
             highlightBoat(intersectedBoat);
@@ -406,7 +432,7 @@ function onDocumentMouseClick(event) {
             _interactionCallbacks.onBoatSelect(boatName);
         }
     } else {
-        // cancel the selection if click the blank part
+        // cancel the selection if click the empty area
         if (_selectedBoatName) {
             resetBoatHighlight();
             showAllTracks();
@@ -416,6 +442,9 @@ function onDocumentMouseClick(event) {
     }
 }
 
+/**
+ * Add edge lines to the mesh to make a highlighted outline effect.
+ */
 function highlightBoat(boatMesh) {
     boatMesh.traverse((child) => {
         if (child.isMesh) {

@@ -1,70 +1,64 @@
 import React, { useEffect, useRef, useState } from "react";
-import "./replay.css";
 import { useClock } from "../../contexts/ClockContext.jsx";
 import * as sceneManager from '../../three/sceneManager.js';
 import { detectDeviceCapabilities } from '../../utils/replayUtils.js';
 
+// Small component to show boat name when selected
 const BoatInfo = ({ boatName }) => {
     return (
         <div>
-          <p>Boat Name: {boatName}</p>
+            <p><strong>Boat:</strong> {boatName}</p>
         </div>
     );
 };
 
-const ReplayPage = ({ allData, canvasRef, upperHalfRef, mapRef }) => {
+// Main replay page
+const ReplayPage = ({ allData, containerRef }) => {
+    // Decide graphics mode (high or low) based on device performance
     const [graphicsMode] = useState(detectDeviceCapabilities());
+
+    // Get current global time from clock context
     const { globalClockTime } = useClock();
+
+    // Which boat is selected (by user click)
     const [selectedBoat, setSelectedBoat] = useState(null);
+
+    // Keep a ref of the global time, so Three.js scene can read it
     const clockTimeRef = useRef(globalClockTime);
 
+    // Update ref whenever globalClockTime changes
     useEffect(() => {
         clockTimeRef.current = globalClockTime;
     }, [globalClockTime]);
 
+    // Setup 3D scene when component loads or data changes
     useEffect(() => {
-        if (upperHalfRef.current && canvasRef.current && mapRef.current && allData.length > 0) {
-            
+        if (containerRef.current && allData.length > 0) {
+            // Callbacks for user interaction in the scene
             const interactionCallbacks = {
                 onBoatSelect: (boatName) => setSelectedBoat(boatName),
                 onBoatDeselect: () => setSelectedBoat(null),
             };
 
             sceneManager.setupScene({
-                canvasRef, 
-                mapRef, 
-                upperHalfRef, 
+                containerRef, // pass container reference directly
                 allData, 
                 graphicsMode,
                 clockTimeRef,
                 interactionCallbacks,
             });
         }
-
+        
+        // Cleanup scene when component unmounts
         return () => {
             sceneManager.cleanup();
         };
+    }, [allData, graphicsMode, containerRef]);
 
-    }, [allData, graphicsMode, upperHalfRef, canvasRef, mapRef]);
-
+    // Show boat info box if a boat is selected
     return (
-        <div>
-            <div
-                id="boat-info-container"
-                style={{
-                    display: selectedBoat ? "block" : "none",
-                    position: "fixed",
-                    top: "10px",
-                    right: "10px",
-                    backgroundColor: "rgba(255, 255, 255, 0.8)",
-                    border: "1px solid #ccc",
-                    padding: "10px",
-                    borderRadius: "5px",
-                    zIndex: 1000,
-                }}
-            >
-                {selectedBoat && <BoatInfo boatName={selectedBoat} />}
-            </div>
+        <div className={`boat-info-container ${selectedBoat ? 'visible' : ''}`}>
+            {selectedBoat && <BoatInfo boatName={selectedBoat} />}
         </div>
     );
 };

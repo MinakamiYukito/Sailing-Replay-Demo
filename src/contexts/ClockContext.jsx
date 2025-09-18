@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+// src/contexts/ClockContext.jsx
+
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 const ClockContext = createContext();
 
@@ -11,62 +13,99 @@ export const ClockProvider = ({ children }) => {
   const [endTime, setEndTime] = useState(null);
   const [allData, setAllData] = useState([]);  
   const [speed, setSpeed] = useState(1);
-  const [lastReceivedTime, setLastReceivedTime] = useState(null);  // Store last received time
+  const [lastReceivedTime, setLastReceivedTime] = useState(null);
+
+  const animationFrameId = useRef();
+  const lastFrameTimeRef = useRef(null);
+  const isPlayingRef = useRef(isPlaying);
+  const speedRef = useRef(speed);
+  const endTimeRef = useRef(endTime);
+
+  useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+  useEffect(() => { speedRef.current = speed; }, [speed]);
+  useEffect(() => { endTimeRef.current = endTime; }, [endTime]);
 
   useEffect(() => {
     if (allData.length > 0) {
-      const earliestStartTime = Math.min(...allData.map(data => data.time[1]));
-      const latestEndTime = Math.max(...allData.map(data => Math.max(...data.time.filter(Boolean))));
-      setStartTime(earliestStartTime);
-      setEndTime(latestEndTime); // Set the latest end time
-      setGlobalClockTime(earliestStartTime); // Initialize globalClockTime
+      const validTimes = allData.map(data => Array.isArray(data.time) ? data.time : []).flat().filter(t => typeof t === 'number' && !isNaN(t));
+      if (validTimes.length > 0) {
+        const earliestStartTime = Math.min(...validTimes);
+        const latestEndTime = Math.max(...validTimes);
+        setStartTime(earliestStartTime);
+        setEndTime(latestEndTime);
+        setGlobalClockTime(earliestStartTime);
+      }
     }
   }, [allData]);
 
   useEffect(() => {
-    if (isPlaying && globalClockTime >= startTime && (endTime === null || globalClockTime <= endTime)) {
-      const interval = setInterval(() => {
-        setGlobalClockTime((prevTime) => prevTime + 0.001 * speed);
-      }, 10);
-      return () => clearInterval(interval);
-    }
-    if (globalClockTime >= endTime) {
-      setIsPlaying(false); // Stop the clock when it reaches the end time
-    }
-  }, [isPlaying, startTime, globalClockTime, endTime, speed]);
+    const animate = (timestamp) => {
+      if (!isPlayingRef.current) {
+        lastFrameTimeRef.current = null;
+        animationFrameId.current = requestAnimationFrame(animate);
+        return;
+      }
+      if (lastFrameTimeRef.current === null) {
+        lastFrameTimeRef.current = timestamp;
+        animationFrameId.current = requestAnimationFrame(animate);
+        return;
+      }
+      
+      const deltaTime = timestamp - lastFrameTimeRef.current;
+      lastFrameTimeRef.current = timestamp;
+      
+      // 计算出真实流逝的秒数
+      const elapsedSeconds = (deltaTime / 1000) * speedRef.current;
 
-  // Update global clock when new data arrives (i.e., live data mode)
+      // ======================= 核心修正 START =======================
+      // 将流逝的秒数转换为分钟，再加到 prevTime 上
+      const timeIncrementInMinutes = elapsedSeconds / 60;
+      // ======================= 核心修正 END =========================
+
+      setGlobalClockTime((prevTime) => {
+        const newTime = prevTime + timeIncrementInMinutes;
+        if (endTimeRef.current !== null && newTime >= endTimeRef.current) {
+          setIsPlaying(false);
+          return endTimeRef.current;
+        }
+        return newTime;
+      });
+
+      animationFrameId.current = requestAnimationFrame(animate);
+    };
+
+    animationFrameId.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, []); 
+
   useEffect(() => {
     if (lastReceivedTime && isPlaying) {
-      setGlobalClockTime(lastReceivedTime);  // Update to the latest time received
+      setGlobalClockTime(lastReceivedTime);
     }
   }, [lastReceivedTime, isPlaying]);
 
   const resetClock = () => {
-    setGlobalClockTime(startTime); // Reset the clock to the start time
-    setIsPlaying(true); // Start playing the clock
+    setGlobalClockTime(startTime);
+    setIsPlaying(true);
   };
-
-  // Function to set last received time from WebSocket
+  
   const updateLastReceivedTime = (time) => {
     setLastReceivedTime(time);
-  }    
+  };
+  
+  const value = {
+    globalClockTime, setGlobalClockTime, setIsPlaying, setAllData, 
+    resetClock, isPlaying, startTime, endTime, setSpeed, speed,
+    updateLastReceivedTime
+  };
 
   return (
-    <ClockContext.Provider 
-      value={{ 
-        globalClockTime, 
-        setGlobalClockTime, 
-        setIsPlaying, 
-        setAllData, 
-        resetClock, 
-        isPlaying, 
-        startTime, 
-        endTime, 
-        setSpeed, 
-        speed,
-        updateLastReceivedTime // Expose this function
-      }}>
+    <ClockContext.Provider value={value}>
       {children}
     </ClockContext.Provider>
   );

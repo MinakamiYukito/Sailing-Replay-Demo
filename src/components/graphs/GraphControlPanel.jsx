@@ -1,5 +1,4 @@
 import { useEffect, useReducer, useState } from "react";
-import "../../assets/main.css";
 import BoomAngleGraph from "./BoomAngleGraph";
 import FwdVelocityGraph from "./FwdVelocityGraph";
 import HeadingGraph from "./HeadingGraph";
@@ -8,219 +7,71 @@ import HikingEffortGraph from "./HikingEffortGraph";
 import RudderAngleGraph from "./RudderAngleGraph";
 import WindVelocityGraph from "./WindVelocityGraph";
 
-
+// All graph option keys (used for checkboxes and mapping)
 const GraphOptions = [
-  "BOOM_ANGLE",
-  "FWD_VELOCITY",
-  "HEADING",
-  "HEEL_ANGLE",
-  "HIKING_EFFORT",
-  "RUDDER_ANGLE",
-  "WIND_VELOCITY",
+  "BOOM_ANGLE", "FWD_VELOCITY", "HEADING", "HEEL_ANGLE",
+  "HIKING_EFFORT", "RUDDER_ANGLE", "WIND_VELOCITY",
 ];
 
-const GraphControlPanel = ({
-  boomAngle,
-  fwdVelo,
-  heelAngle,
-  heading,
-  hiking,
-  rudderAngle,
-  time,
-  windVelo,
-  globalClockTime,
-  isAssetLoaded,
-  allData,
-}) => {
-  let maxTimeLength = 0;
-  let maxTimeIndex = 0;
-
-  const [boatPaths, setBoatPaths] = useState({}); // Initialize state for boat paths in live data mode
-  const [liveData, setLiveData] = useState([]);  // Initialize state for live data 
-
-  // function to set the boat paths in live data mode
-  const setBoatPathsLiveData = (allData) => {
-    setBoatPaths((prevBoatPaths) => {
-      const updatedBoatPaths = { ...prevBoatPaths };
-
-      allData.forEach((boatData, index) => {
-        const { 
-          time, 
-          metadata,
-          courseData,
-          boatId,
-          name,
-          X_Position,
-          Y_Position,
-          headingRadians,
-          fwdVelocity,
-          hikingEffect,
-          boomAngle,
-          heelAngle,
-          heading,
-          rudderAngle,
-          windVelo,
-         } = boatData;
-
-        // Initialize arrays if not already present for each boat
-        if (!updatedBoatPaths[index]) {
-          updatedBoatPaths[index] = {
-            time: [],
-            X_Position: [],
-            Y_Position: [],
-            metadata,
-            courseData,
-            boatId,
-            name,
-            headingRadians: [],
-            fwdVelocity: [],
-            hikingEffect: [],
-            boomAngle: [],
-            heelAngle: [],
-            heading: [],
-            rudderAngle: [],
-            windVelo: [],            
-          };
-        }
-
-        // Append new data to the existing boat's path
-        updatedBoatPaths[index].time.push(...time);
-        updatedBoatPaths[index].X_Position.push(...X_Position);
-        updatedBoatPaths[index].Y_Position.push(...Y_Position);
-        updatedBoatPaths[index].headingRadians.push(...headingRadians);
-        updatedBoatPaths[index].fwdVelocity.push(...fwdVelocity);
-        updatedBoatPaths[index].hikingEffect.push(...hikingEffect);
-        updatedBoatPaths[index].boomAngle.push(...boomAngle);
-        updatedBoatPaths[index].heelAngle.push(...heelAngle);
-        updatedBoatPaths[index].heading.push(...heading);
-        updatedBoatPaths[index].rudderAngle.push(...rudderAngle);
-        updatedBoatPaths[index].windVelo.push(...windVelo);        
-      });
-
-      return updatedBoatPaths;
-    });
-  };
-
-
-
-  
-  // Effect to set boat paths in live data mode
-  useEffect(() => {
-    if (allData.length > 0) {
-      setBoatPathsLiveData(allData);      
-    }    
-  }, [allData]);
-
-  useEffect(() => {    
-  }, [boatPaths]);
-
-  allData.forEach((fileData, index) => {
-    if (fileData.time.length > maxTimeLength) {
-      maxTimeLength = fileData.time.length;
-      maxTimeIndex = index;
-    }
-  });
-
-  const FileTime = allData[maxTimeIndex].time; 
-
+const GraphControlPanel = (props) => {
+  const { time, globalClockTime, isAssetLoaded } = props;
   const [frameIndex, setFrameIndex] = useState(0);
-  const [proccessTime, setProcessTime] = useState([]);
-  const [proccessFwd, setProcessFwd] = useState([]);
-  const [proccessHiking, setProcessHiking] = useState([]);
+  
+  // Which graphs to display (at most two at the same time)
+  // Toggle logic:
+  // - If option already on -> remove it
+  // - If turn on a third -> keep only the last two selected
   const [plotsDispState, togglePlotsDispState] = useReducer(
-    (_plotsDispState, plotsDispStateChange) =>
-      _plotsDispState.includes(plotsDispStateChange.type)
-        ? _plotsDispState.filter((s) => s !== plotsDispStateChange.type)
-        : [
-            ...(_plotsDispState.length === 2
-              ? _plotsDispState.slice(1)
-              : _plotsDispState),
-            plotsDispStateChange.type,
-          ],
+    (state, action) => {
+      if (state.includes(action.type)) {
+        return state.filter((s) => s !== action.type);
+      }
+      const newState = [...state, action.type];
+      return newState.length > 2 ? newState.slice(1) : newState;
+    },
     ["FWD_VELOCITY", "WIND_VELOCITY"]
   );
 
   useEffect(() => {
-    const timeValue = FileTime.map((_time) => _time.time);
-    setProcessTime(timeValue);
-
-    const fwdValue = fwdVelo.map((_fwd) => _fwd.fwd_velocity);
-    setProcessFwd(fwdValue);
-
-    const hikingValue = hiking.map((_hiking) => _hiking.hiking_effect);
-    setProcessHiking(hikingValue);
-  }, []);
-
-  useEffect(() => {
-    const newIndex = FileTime.findIndex((t) => t >= globalClockTime);
+    if (!time || time.length === 0) return;
+    const newIndex = time.findIndex((t) => t >= globalClockTime);
     if (newIndex !== -1 && newIndex !== frameIndex) {
       setFrameIndex(newIndex);
     }
-  }, [globalClockTime, FileTime, frameIndex]);  
+  }, [globalClockTime, time, frameIndex]);
 
+  const componentMap = {
+    BOOM_ANGLE: <BoomAngleGraph key="boom" {...props} frameIndex={frameIndex} />,
+    FWD_VELOCITY: <FwdVelocityGraph key="fwd" {...props} frameIndex={frameIndex} />,
+    HEADING: <HeadingGraph key="heading" {...props} frameIndex={frameIndex} />,
+    HEEL_ANGLE: <HeelAngleGraph key="heel" {...props} frameIndex={frameIndex} />,
+    HIKING_EFFORT: <HikingEffortGraph key="hiking" {...props} frameIndex={frameIndex} />,
+    RUDDER_ANGLE: <RudderAngleGraph key="rudder" {...props} frameIndex={frameIndex} />,
+    WIND_VELOCITY: <WindVelocityGraph key="wind" {...props} frameIndex={frameIndex} />,
+  };
 
-  
-const componentMap = {
-  BOOM_ANGLE: BoomAngleGraph,
-  FWD_VELOCITY: FwdVelocityGraph,
-  HEADING: HeadingGraph,
-  HEEL_ANGLE: HeelAngleGraph,
-  HIKING_EFFORT: HikingEffortGraph,
-  RUDDER_ANGLE: RudderAngleGraph,
-  WIND_VELOCITY: WindVelocityGraph,
-};
-
-const commonGraphProps = {
-  time: FileTime,
-  isRunning: isAssetLoaded,
-  frameIndex: frameIndex,
-  globalClockTime: globalClockTime,
-  liveData: liveData,
-};
-
-return (
-  <div className="graph_panel">
-    <div style={{ width: "250px", paddingLeft: "30px" }}>
-      {GraphOptions.map((option) => (
-        <p key={option} style={{ color: `black` }}>
-          <input
-            type={`checkbox`}
-            name={option}
-            checked={plotsDispState.includes(option)}
-            onChange={(event) =>
-              togglePlotsDispState({ type: event.target.name })
-            }
-          />
-          {option}
-        </p>
-      ))}
+  return (
+    <div className="graph_panel">
+      <div className="graph-options">
+        {GraphOptions.map((option) => (
+          <p key={option}>
+            <label>
+              <input
+                type="checkbox"
+                name={option}
+                checked={plotsDispState.includes(option)}
+                onChange={(event) => togglePlotsDispState({ type: event.target.name })}
+              />
+              {option.replace(/_/g, " ")}
+            </label>
+          </p>
+        ))}
+      </div>
+      <div className="graph_container">
+        {plotsDispState.map((dispState) => componentMap[dispState])}
+      </div>
     </div>
-    <div className="graph_container">
-      {plotsDispState.map((dispState) => {
-        const GraphComponent = componentMap[dispState];
-        
-        if (GraphComponent) {
-          return (
-            <GraphComponent
-              key={dispState} 
-              {...commonGraphProps}
-              {...{
-                BOOM_ANGLE: { boomAngle: boomAngle },
-                FWD_VELOCITY: { fwdVelo: fwdVelo },
-                HEADING: { heading: heading },
-                HEEL_ANGLE: { heelAngle: heelAngle },
-                HIKING_EFFORT: { hiking: hiking },
-                RUDDER_ANGLE: { rudderAngle: rudderAngle },
-                WIND_VELOCITY: { windVelo: windVelo },
-              }[dispState]}
-            />
-          );
-        }
-        return null;
-      })}
-    </div>
-  </div>
-);
+  );
 };
 
 export default GraphControlPanel;

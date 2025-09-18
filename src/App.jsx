@@ -1,87 +1,88 @@
 import React, { useRef, useState } from "react";
-import Replay from "./pages/ReplayPage/ReplayPage.jsx";
+import ReplayPage from "./pages/ReplayPage/ReplayPage.jsx";
 import ReplayControls from "./components/replay/ReplayControls.jsx";
-import "./assets/main.css";
 import Map from "./components/replay/Map.jsx";
 import GraphControlPanel from "./components/graphs/GraphControlPanel.jsx";
-import Landing from "./pages/LandingPage/LandingPage.jsx";
+import LandingPage from "./pages/LandingPage/LandingPage.jsx";
 import { ClockProvider, useClock } from "./contexts/ClockContext.jsx";
+import "./assets/main.css";
+
+// Main content of the app
 
 const AppContent = () => {
-  const canvasRef = useRef(null);
-  const upperHalfRef = useRef(null);
-  const mapRef = useRef(null);
-  const graphRef = useRef(null);
-  const [fileData, setFileData] = useState(null);
-  const { isPlaying, setIsPlaying, setAllData, globalClockTime } = useClock();
+    const renderContainerRef = useRef(null);
+    const [fileData, setFileData] = useState(null);
+    const { isPlaying, setIsPlaying, setAllData, globalClockTime } = useClock();
 
-  const handleDataReceived = (newData) => {
-    console.log("handleDataReceived success", newData);
-    
-    if (newData && newData.length > 0) {
-      setFileData(newData);
-      setAllData(newData);
-      setIsPlaying(true);
-      console.log("State updated");
-    } else {
-      console.error("cannot replay because of empty or incorrect format data ");
+    // Handle new replay data when uploaded
+    const handleDataReceived = (newData) => {
+        if (newData && newData.length > 0) {
+            setFileData(newData);
+            setAllData(newData);
+            setIsPlaying(true);
+        } else {
+            console.error("Cannot replay: empty or incorrect data format.");
+        }
+    };
+    // Play or pause toggle
+    const handlePlay = () => setIsPlaying(prev => !prev);
+
+    const handleReplay = () => setFileData(null); 
+
+    // If no data yet, show landing page
+    if (!fileData) {
+        return <LandingPage onDataReceived={handleDataReceived} />;
     }
-  };
+    
+    // Make sure first boat data exists, avoid crash on first render
 
-  const handlePlay = () => setIsPlaying(prev => !prev);
-  const handleReplay = () => setFileData(null);
+    const firstBoatData = fileData[0]; 
 
-  if (!fileData) {
-    return <Landing onDataReceived={handleDataReceived} />;
-  } 
-  
-  return (
-    <div className="container">
-        <div className="upper_half" ref={upperHalfRef}>
-          <div id="render" ref={canvasRef}>
-            <Replay
-              allData={fileData}
-              canvasRef={canvasRef}
-              mapRef={mapRef}
-              upperHalfRef={upperHalfRef}
-              isPlaying={isPlaying}
-            />
-          </div>
+    return (
+        <div className="container">
+            <div className="upper-half">
+                <div id="render-wrapper" ref={renderContainerRef}>
+                    <ReplayPage
+                        allData={fileData}
+                        containerRef={renderContainerRef}
+                    />
+                    <div className="replay-control-wrapper">
+                      <ReplayControls 
+                          onPlay={handlePlay} 
+                          onReplay={handleReplay}
+                      />
+                    </div>
+                </div>
+                <div id="map-wrapper">
+                    <Map allData={fileData} />
+                </div>
+            </div>
+            <div className="lower-half">
+                {/* Render graphs only if boat data exists */}
+                {firstBoatData && (
+                    <GraphControlPanel
+                        //  wrap single values in [] so they become arrays
+                        boomAngle={[firstBoatData.boomAngle]}
+                        fwdVelo={[firstBoatData.fwdVelocity]}
+                        heelAngle={[firstBoatData.heelAngle]}
+                        heading={[firstBoatData.heading]}
+                        hiking={[firstBoatData.hikingEffect]}
+                        rudderAngle={[firstBoatData.rudderAngle]}
+                        time={firstBoatData.time} // Time is shared, keep as one array
+                        windVelo={[firstBoatData.windVelo]}
+                        
+                        globalClockTime={globalClockTime}
+                        isAssetLoaded={true}
+                    />
+                )}
+            </div>
         </div>
-        <div className="replay-control">
-          <ReplayControls 
-            onPlay={handlePlay} 
-            onReplay={handleReplay}
-          />
-        </div>
-        <div id="map" ref={mapRef}>
-          <Map allData={fileData} />
-        </div>
-        <div className="lower_half" ref={graphRef}>
-          <GraphControlPanel
-            boomAngle={fileData.map(data => data.boomAngle)}
-            fwdVelo={fileData.map(data => data.fwdVelocity)}
-            heelAngle={fileData.map(data => data.heelAngle)}
-            heading={fileData.map(data => data.heading)}
-            hiking={fileData.map(data => data.hikingEffect)}
-            rudderAngle={fileData.map(data => data.rudderAngle)}
-            time={fileData.map(data => data.time)}
-            X_Position={fileData.map(data => data.X_Position)}
-            Y_Position={fileData.map(data => data.Y_Position)}
-            headingRadians={fileData.map(data => data.headingRadians)}
-            windVelo={fileData.map(data => data.windVelo)}
-            allData={fileData}
-            globalClockTime={globalClockTime}
-          />
-        </div>
-      </div>
-  );
+    );
 };
-
 const App = () => (
-  <ClockProvider>
-    <AppContent />
-  </ClockProvider>
+    <ClockProvider>
+        <AppContent />
+    </ClockProvider>
 );
 
 export default App;
