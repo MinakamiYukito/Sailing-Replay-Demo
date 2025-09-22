@@ -59,22 +59,25 @@ const AppContent = () => {
             </div>
             <div className="lower-half">
                 {/* Render graphs only if boat data exists */}
-                {firstBoatData && (
-                    <GraphControlPanel
+                <GraphControlPanel
                         //  wrap single values in [] so they become arrays
-                        boomAngle={[firstBoatData.boomAngle]}
-                        fwdVelo={[firstBoatData.fwdVelocity]}
-                        heelAngle={[firstBoatData.heelAngle]}
-                        heading={[firstBoatData.heading]}
-                        hiking={[firstBoatData.hikingEffect]}
-                        rudderAngle={[firstBoatData.rudderAngle]}
-                        time={firstBoatData.time} // Time is shared, keep as one array
-                        windVelo={[firstBoatData.windVelo]}
-                        
-                        globalClockTime={globalClockTime}
-                        isAssetLoaded={true}
-                    />
-                )}
+                    // **核心修正：确保这里是 .map() 来传递所有船的数据**
+                    boomAngle={fileData.map(data => data.boomAngle)}
+                    fwdVelo={fileData.map(data => data.fwdVelocity)}
+                    heelAngle={fileData.map(data => data.heelAngle)}
+                    heading={fileData.map(data => data.heading)}
+                    hiking={fileData.map(data => data.hikingEffect)}
+                    rudderAngle={fileData.map(data => data.rudderAngle)}
+                    windVelo={fileData.map(data => data.windVelo)}
+                    
+                    // **time prop 也必须是包含所有船只时间数组的二维数组**
+                    time={fileData.map(data => data.time)}
+                    
+                    // 其他 props 保持不变
+                    globalClockTime={globalClockTime}
+                    isAssetLoaded={true}
+                />
+
             </div>
         </div>
     );

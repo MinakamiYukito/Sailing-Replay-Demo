@@ -176,7 +176,7 @@ html, body, #root {
 }
 
 .graph_panel p {
-  margin: 12px 0;
+  margin: 10px 0;
 }
 
 .graph_container {
@@ -184,6 +184,10 @@ html, body, #root {
   display: flex;
   gap: 20px;
   min-width: 0;
+}
+
+.graph_panel label {
+  font-size: 12px; 
 }
 
 .graph_container > div {
